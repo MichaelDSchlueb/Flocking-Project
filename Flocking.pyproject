@@ -1,0 +1,17 @@
+{
+    "files": [
+        "Agent.py",
+        "Behaviors.py",
+        "Constants.py",
+        "GuiFlockingArea.py",
+        "GuiMainWindow.py",
+        "Obstacle.py",
+        "Utils.py",
+        "Vector2d.py",
+        "form.ui",
+        "main.py",
+        "main.py",
+        "requirements.txt",
+        "ui_form.py"
+    ]
+}
