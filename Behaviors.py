@@ -77,21 +77,33 @@ class Behaviors:
         desiredDir = np.array([0,0])
         posDiff = np.array([0,0])
         predatorsInSim = 0
+        prevDir = curAgent.getPrevDir()
         avg = np.array([0,0])
+        predDistances = []
+        flightAvg = 0
+        z = 0
         curAgentPos = curAgent.getPos()
+        c = 1
         for pred in predatorAgents:
+            if pred == curAgent:
+                continue
             #what would happen if the predator was in the range for the bird to see it?
             predPos =   pred.getPos()
-            posDiff[0] += (curAgentPos[0] - predPos[0])
-            posDiff[1] += (curAgentPos[1] - predPos[1])
+            posDiff[0] = (curAgentPos[0] - predPos[0])
+            posDiff[1] = (curAgentPos[1] - predPos[1])
+            dist = utils.length(posDiff)
+            weight = 1/(dist*dist + c)
+            predDistances.append(posDiff * weight)
+            #utils.normalize(predDistances[z])
             predatorsInSim += 1
+            z = z + 1
         if predatorsInSim > 0:
-            #avg[0] = posDiff[0]/predatorsInSim
-            #avg[1] = posDiff[1]/predatorsInSim
-        #if avg[0] != 0 and avg[1] != 0:
-            desiredDir = posDiff
-            newForce = utils.normalize(desiredDir * consts.DESIRED_SPEED) - utils.normalize(curAgent.getVel())
-            newForce = utils.normalize(newForce)
+            for predDist in predDistances:
+              flightAvg += predDist
+            desiredDir = flightAvg 
+            desiredVelocity = utils.normalize(desiredDir * consts.DESIRED_SPEED)
+            newForce = desiredVelocity - utils.normalize(curAgent.getVel())
+            curAgent.setPrevDir(desiredDir)
         return(newForce)
 
     #
@@ -101,23 +113,29 @@ class Behaviors:
     def adjustAccForNeighborAvoidance(self, curAgent, preyAgents):
         newForce = np.array([0, 0])
         posDiff = np.array([0,0])
+        c = 1
         desiredDir = np.array([0,0])
         preyPos = np.array([0,0])
         curAgentPos = curAgent.getPos()
+        flightAvg = 0
         neighbor = 0
+        preyDistances = []
         for prey in preyAgents:
             if prey == curAgent:
                 continue
             preyPos = prey.getPos()
             dist = utils.distance(curAgentPos,preyPos)
-            if dist <= consts.MAX_SEE_AHEAD and dist >= 0:
+            if dist >= consts.MIN_AVOID_DIST:
                 posDiff[0] += (curAgentPos[0] - preyPos[0]) 
-                posDiff[1] += (curAgentPos[1] - curAgentPos[1])
+                posDiff[1] += (curAgentPos[1] - preyPos[1])
+                #dist = utils.length(posDiff)
+                #weight = 1/(dist*dist + c)
+                #preyDistances.append(posDiff * weight)
                 neighbor += 1
         if neighbor > 0:
-            desiredDir = utils.normalize(posDiff)
-            newForce = desiredDir * consts.DESIRED_SPEED - utils.normalize(curAgent.getVel())
-            newForce = self.limitSpeed(newForce)
+           desiredDir = utils.normalize(posDiff)
+           newForce = desiredDir * consts.DESIRED_SPEED - utils.normalize(curAgent.getVel())
+           newForce = self.limitSpeed(newForce)
         return(newForce)
 
     #
