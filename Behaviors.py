@@ -117,7 +117,6 @@ class Behaviors:
         desiredDir = np.array([0,0])
         preyPos = np.array([0,0])
         curAgentPos = curAgent.getPos()
-        flightAvg = 0
         neighbor = 0
         preyDistances = []
         for prey in preyAgents:
@@ -125,15 +124,20 @@ class Behaviors:
                 continue
             preyPos = prey.getPos()
             dist = utils.distance(curAgentPos,preyPos)
-            if dist >= consts.MIN_AVOID_DIST:
+            #preyPosWithRaise = preyPos[0] * consts.MIN_AVOID_DIST, preyPos[1] * consts.MIN_AVOID_DIST
+            if dist <= consts.MIN_AVOID_DIST:
                 posDiff[0] += (curAgentPos[0] - preyPos[0]) 
                 posDiff[1] += (curAgentPos[1] - preyPos[1])
-                #dist = utils.length(posDiff)
-                #weight = 1/(dist*dist + c)
-                #preyDistances.append(posDiff * weight)
+                dist = utils.length(posDiff)
+                weight = 1/(dist*dist + c)
+                preyDistances.append(posDiff * weight)
                 neighbor += 1
         if neighbor > 0:
-           desiredDir = utils.normalize(posDiff)
+           shortDist = preyDistances[0]
+           for preyDist in preyDistances:
+                if utils.length(preyDist) < utils.length(shortDist):
+                     shortDist = preyDist
+           desiredDir = utils.normalize(shortDist)
            newForce = desiredDir * consts.DESIRED_SPEED - utils.normalize(curAgent.getVel())
            newForce = self.limitSpeed(newForce)
         return(newForce)
